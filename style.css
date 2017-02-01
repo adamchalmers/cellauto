@@ -1,0 +1,22 @@
+td {
+    border: 1px solid gray;
+    width: 10px;
+    height: 10px;
+}
+
+.dead {
+    background: black;
+}
+
+.live {
+    background: white;
+}
+
+table {
+    margin: 0 auto;
+}
+
+.buttons {
+    margin: 0 auto;
+    /*width: 200px;*/
+}

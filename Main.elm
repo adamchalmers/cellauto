@@ -3,7 +3,7 @@ module Main exposing (..)
 import Html exposing (Html, program)
 import Time
 import Html exposing (..)
-import Html.Attributes exposing (style)
+import Html.Attributes exposing (style, class)
 import Html.Events exposing (onClick)
 import Grid as G
 import List as L
@@ -125,9 +125,9 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    div [] <|
-        (buttonsFor model.state) ++
-        [ cellGridTable model.cellgrid
+    div []
+        [ div [ class "buttons" ] (buttonsFor model.state)
+        , cellGridTable model.cellgrid
         ]
 
 cellGridTable : CellGrid -> Html Msg
@@ -138,21 +138,11 @@ cellGridTable grid =
         tdFor (x, y) cell =
             td
                 [ onClick (Click (x, y))
-                , style <| tdStyle cell
+                , class (if cell == Live then "live" else "dead")
                 ]
                 []
     in
         table [] (L.indexedMap row <| G.toLists grid)
-
-tdStyle : Cell -> List (String, String)
-tdStyle cell =
-    [ ("width", globals.cellWidth)
-    , ("height", globals.cellWidth)
-    , ("background", case cell of
-        Live -> "white"
-        Dead -> "black")
-    , ("border", "1px solid gray")
-    ]
 
 buttonsFor : State -> List (Html Msg)
 -- The state determines which GUI controls to show.
