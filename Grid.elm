@@ -1,8 +1,10 @@
-module Grid exposing (Grid, Index, init, initAs, map, indexedMap, fromLists, toLists, get, set, transpose, length, height, neighbours, mutate, incSize, decSize)
+module Grid exposing (Grid, Index, init, initAs, pickle, map, indexedMap, fromLists, toLists, get, set, transpose, length, height, neighbours, mutate, incSize, decSize)
 
 import Array as A
-import List
+import List as L
 import Maybe exposing (andThen)
+import String
+
 
 -- EXPOSED FUNCTIONS
 
@@ -104,6 +106,12 @@ decSize g =
         shrunkRows = A.map (\arr -> A.slice 0 (-1 + A.length arr) arr) g
     in
         A.slice 0 (-1 + A.length g) shrunkRows
+
+pickle : (a -> String) -> Grid a -> String
+pickle f g = String.concat <| L.concat (toLists <| stringify f g)
+
+stringify : (a -> String) -> Grid a -> Grid String
+stringify f g = indexedMap (\index val -> "{" ++ (toString index) ++ ":" ++ (f val) ++ "}") g
 
 -- UNEXPOSED FUNCTIONS
 

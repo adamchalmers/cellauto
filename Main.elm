@@ -1,7 +1,7 @@
 module Main exposing (..)
 
-import Html exposing (Html, program, div, text, button, tr, td, table)
-import Html.Attributes exposing (style, class)
+import Html exposing (..)
+import Html.Attributes exposing (style, class, value)
 import Html.Events exposing (onClick)
 import List as L
 import Time
@@ -11,7 +11,11 @@ import Grid as G
 
 -- MODEL
 
-type State = Stopped | Playing | Paused
+type PlayState = Stopped | Playing | Paused
+type alias State =
+    { play: PlayState
+    , boardCode: Bool
+    }
 
 type alias CellGrid = G.Grid Cell
 
@@ -33,7 +37,7 @@ initGrid =
 
 init : (Model, Cmd Msg)
 init =
-    ( { state = Stopped
+    ( { state = {play = Stopped, boardCode = True}
       , cellgrid = initGrid
       , startGrid = initGrid
       , rounds = 0}
@@ -51,26 +55,30 @@ type Msg =
     | IncSize
     | DecSize
     | Clear
+    | ToggleBoardCode
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
     case msg of
 
+        -- Starts evolution of the board according to game rules, disables board editing.
         Play ->
             ( { model
-              | state = Playing
+              | state = {play = Playing, boardCode = model.state.boardCode}
               }
             , Cmd.none)
 
+        -- Pauses evolution.
         Pause ->
             ( { model
-              | state = Paused
+              | state = {play = Paused, boardCode = model.state.boardCode}
               }
             , Cmd.none)
 
+        -- Resets the board (undoing all evolution) and enables board editing.
         Stop ->
             ( { model
-              | state = Stopped
+              | state = {play = Stopped, boardCode = model.state.boardCode}
               , cellgrid = model.startGrid
               , rounds = 0
               }
@@ -79,11 +87,11 @@ update msg model =
         -- When time ticks forward, evolve the model according to the cellular automaton rules.
         Tick t ->
 
-            case model.state of
+            case model.state.play of
 
                 Playing ->
                     ( { model
-                      | cellgrid = evolve model.cellgrid
+                      | cellgrid = G.indexedMap (\index c -> Rules.evolveCell c (G.neighbours index model.cellgrid)) model.cellgrid
                       , rounds = model.rounds + 1
                       }
                     , Cmd.none)
@@ -93,7 +101,7 @@ update msg model =
         -- If the game is stopped, allow the player to modify the starting automaton configuration. Only allowed while game is stopped.
         Click (x, y) ->
 
-            case model.state of
+            case model.state.play of
 
                 Stopped ->
                     ( { model
@@ -105,7 +113,7 @@ update msg model =
 
         -- Add a row/column. Only allowed while game is stopped.
         IncSize ->
-            case model.state of
+            case model.state.play of
 
                 Stopped ->
                     ( { model
@@ -117,7 +125,7 @@ update msg model =
 
         -- Add a row/column. Only allowed while game is stopped.
         DecSize ->
-            case model.state of
+            case model.state.play of
 
                 Stopped ->
                     ( { model
@@ -129,7 +137,7 @@ update msg model =
 
         -- Clear the board by setting all cells to their default value.
         Clear ->
-            case model.state of
+            case model.state.play of
 
                 Stopped ->
                     ( { model
@@ -139,12 +147,16 @@ update msg model =
                     , Cmd.none)
                 _ -> (model, Cmd.none)
 
+        -- Encodes the user's initial board design into a string and logs it in the console.
+        ToggleBoardCode ->
+            ({model | state = {boardCode = not model.state.boardCode, play = model.state.play}}, Cmd.none)
+
 -- VIEW
 
 view : Model -> Html Msg
 view model =
     div []
-        [ div [ class "buttons" ] (buttonsFor model.state)
+        [ div [ class "buttons" ] (buttonsFor model)
         , div [ class "rounds" ] [ text ("Time: " ++ (toString model.rounds))]
         , cellGridTable model.cellgrid
         ]
@@ -163,9 +175,9 @@ cellGridTable grid =
     in
         table [] (L.indexedMap row <| G.toLists grid)
 
-buttonsFor : State -> List (Html Msg)
+buttonsFor : Model -> List (Html Msg)
 -- The state determines which GUI controls to show.
-buttonsFor state =
+buttonsFor m =
     let
         stop = button [onClick Stop] [text "Stop"]
         play = button [onClick Play] [text "Play"]
@@ -173,10 +185,15 @@ buttonsFor state =
         plus = button [onClick IncSize] [text "+ Row"]
         minus = button [onClick DecSize] [text "- Row"]
         clear = button [onClick Clear] [text "Clear board"]
-    in case state of
-        Stopped -> [play, plus, minus, clear]
-        Playing -> [pause, stop]
-        Paused -> [play, stop]
+        showBoardCode = button [onClick ToggleBoardCode] [text "Show/hide board code"]
+        boardCodeDisplay = if m.state.boardCode then "none" else "initial"
+        boardCodeVal = G.pickle Rules.pickleCell m.cellgrid
+    in
+        ( case m.state.play of
+          Stopped -> [play, plus, minus, clear, showBoardCode]
+          Playing -> [pause, stop]
+          Paused -> [play, stop]
+        ) ++ [ input [style <| [("display", boardCodeDisplay)], value boardCodeVal] [] ]
 
 -- WIRING
 
@@ -190,9 +207,3 @@ main = program
     , update = update
     , subscriptions = subs
     }
-
--- CELLULAR AUTOMATON LOGIC
-
-evolve : CellGrid -> CellGrid
-evolve g =
-    G.indexedMap (\index cell -> Rules.evolveCell cell (G.neighbours index g)) g

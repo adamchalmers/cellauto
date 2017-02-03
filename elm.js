@@ -8803,28 +8803,41 @@ var _elm_lang$html$Html_Events$Options = F2(
 		return {stopPropagation: a, preventDefault: b};
 	});
 
-var _user$project$GameOfLife$born = _elm_lang$core$Set$fromList(
-	{
-		ctor: '::',
-		_0: 3,
-		_1: {ctor: '[]'}
-	});
-var _user$project$GameOfLife$survive = _elm_lang$core$Set$fromList(
-	{
-		ctor: '::',
-		_0: 2,
-		_1: {
+var _user$project$GameOfLife$pickleCell = function (cell) {
+	var _p0 = cell;
+	if (_p0.ctor === 'Live') {
+		return 'L';
+	} else {
+		return 'D';
+	}
+};
+var _user$project$GameOfLife$_p1 = {
+	ctor: '_Tuple2',
+	_0: _elm_lang$core$Set$fromList(
+		{
+			ctor: '::',
+			_0: 2,
+			_1: {
+				ctor: '::',
+				_0: 3,
+				_1: {ctor: '[]'}
+			}
+		}),
+	_1: _elm_lang$core$Set$fromList(
+		{
 			ctor: '::',
 			_0: 3,
 			_1: {ctor: '[]'}
-		}
-	});
+		})
+};
+var _user$project$GameOfLife$survive = _user$project$GameOfLife$_p1._0;
+var _user$project$GameOfLife$born = _user$project$GameOfLife$_p1._1;
 var _user$project$GameOfLife$Dead = {ctor: 'Dead'};
 var _user$project$GameOfLife$defaultCell = _user$project$GameOfLife$Dead;
 var _user$project$GameOfLife$Live = {ctor: 'Live'};
 var _user$project$GameOfLife$onClick = function (c) {
-	var _p0 = c;
-	if (_p0.ctor === 'Live') {
+	var _p2 = c;
+	if (_p2.ctor === 'Live') {
 		return _user$project$GameOfLife$Dead;
 	} else {
 		return _user$project$GameOfLife$Live;
@@ -8833,8 +8846,8 @@ var _user$project$GameOfLife$onClick = function (c) {
 var _user$project$GameOfLife$cssClass = function (cell) {
 	return _elm_lang$core$Native_Utils.eq(cell, _user$project$GameOfLife$Live) ? 'live' : 'dead';
 };
-var _user$project$GameOfLife$initBoard = function (_p1) {
-	var _p2 = _p1;
+var _user$project$GameOfLife$initBoard = function (_p3) {
+	var _p4 = _p3;
 	var startCells = _elm_lang$core$Set$fromList(
 		{
 			ctor: '::',
@@ -8887,7 +8900,7 @@ var _user$project$GameOfLife$initBoard = function (_p1) {
 		});
 	return A2(
 		_elm_lang$core$Set$member,
-		{ctor: '_Tuple2', _0: _p2._0, _1: _p2._1},
+		{ctor: '_Tuple2', _0: _p4._0, _1: _p4._1},
 		startCells) ? _user$project$GameOfLife$Live : _user$project$GameOfLife$Dead;
 };
 var _user$project$GameOfLife$evolveCell = F2(
@@ -8904,13 +8917,24 @@ var _user$project$GameOfLife$evolveCell = F2(
 		};
 		var numDead = count(_user$project$GameOfLife$Dead);
 		var numLive = count(_user$project$GameOfLife$Live);
-		var _p3 = cell;
-		if (_p3.ctor === 'Live') {
+		var _p5 = cell;
+		if (_p5.ctor === 'Live') {
 			return A2(_elm_lang$core$Set$member, numLive, _user$project$GameOfLife$survive) ? _user$project$GameOfLife$Live : _user$project$GameOfLife$Dead;
 		} else {
 			return A2(_elm_lang$core$Set$member, numLive, _user$project$GameOfLife$born) ? _user$project$GameOfLife$Live : _user$project$GameOfLife$Dead;
 		}
 	});
+var _user$project$GameOfLife$unpickleCell = function (str) {
+	var _p6 = str;
+	switch (_p6) {
+		case 'L':
+			return _elm_lang$core$Maybe$Just(_user$project$GameOfLife$Live);
+		case 'D':
+			return _elm_lang$core$Maybe$Just(_user$project$GameOfLife$Dead);
+		default:
+			return _elm_lang$core$Maybe$Nothing;
+	}
+};
 
 var _user$project$Grid$unmaybeList = function (elems) {
 	var _p0 = elems;
@@ -9112,6 +9136,35 @@ var _user$project$Grid$indexedMap = F2(
 			});
 		return A2(_elm_lang$core$Array$indexedMap, rowFn, grid);
 	});
+var _user$project$Grid$stringify = F2(
+	function (f, g) {
+		return A2(
+			_user$project$Grid$indexedMap,
+			F2(
+				function (index, val) {
+					return A2(
+						_elm_lang$core$Basics_ops['++'],
+						'{',
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							_elm_lang$core$Basics$toString(index),
+							A2(
+								_elm_lang$core$Basics_ops['++'],
+								':',
+								A2(
+									_elm_lang$core$Basics_ops['++'],
+									f(val),
+									'}'))));
+				}),
+			g);
+	});
+var _user$project$Grid$pickle = F2(
+	function (f, g) {
+		return _elm_lang$core$String$concat(
+			_elm_lang$core$List$concat(
+				_user$project$Grid$toLists(
+					A2(_user$project$Grid$stringify, f, g))));
+	});
 var _user$project$Grid$map = F2(
 	function (f, grid) {
 		return A2(
@@ -9151,8 +9204,8 @@ var _user$project$Grid$height = function (g) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Grid',
 			{
-				start: {line: 17, column: 5},
-				end: {line: 19, column: 37}
+				start: {line: 19, column: 5},
+				end: {line: 21, column: 37}
 			},
 			_p13)('Grid doesn\'t have a second dimension.');
 	} else {
@@ -9177,20 +9230,12 @@ var _user$project$Grid$transpose = function (grid) {
 				r)));
 };
 
-var _user$project$Main$evolve = function (g) {
-	return A2(
-		_user$project$Grid$indexedMap,
-		F2(
-			function (index, cell) {
-				return A2(
-					_user$project$GameOfLife$evolveCell,
-					cell,
-					A2(_user$project$Grid$neighbours, index, g));
-			}),
-		g);
-};
 var _user$project$Main$globals = {numRows: 30, cellWidth: '10px'};
 var _user$project$Main$initGrid = A3(_user$project$Grid$initAs, _user$project$GameOfLife$initBoard, _user$project$Main$globals.numRows, _user$project$Main$globals.numRows);
+var _user$project$Main$State = F2(
+	function (a, b) {
+		return {play: a, boardCode: b};
+	});
 var _user$project$Main$Model = F4(
 	function (a, b, c, d) {
 		return {state: a, cellgrid: b, startGrid: c, rounds: d};
@@ -9200,7 +9245,12 @@ var _user$project$Main$Playing = {ctor: 'Playing'};
 var _user$project$Main$Stopped = {ctor: 'Stopped'};
 var _user$project$Main$init = {
 	ctor: '_Tuple2',
-	_0: {state: _user$project$Main$Stopped, cellgrid: _user$project$Main$initGrid, startGrid: _user$project$Main$initGrid, rounds: 0},
+	_0: {
+		state: {play: _user$project$Main$Stopped, boardCode: true},
+		cellgrid: _user$project$Main$initGrid,
+		startGrid: _user$project$Main$initGrid,
+		rounds: 0
+	},
 	_1: _elm_lang$core$Platform_Cmd$none
 };
 var _user$project$Main$update = F2(
@@ -9212,7 +9262,9 @@ var _user$project$Main$update = F2(
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
-						{state: _user$project$Main$Playing}),
+						{
+							state: {play: _user$project$Main$Playing, boardCode: model.state.boardCode}
+						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			case 'Pause':
@@ -9220,7 +9272,9 @@ var _user$project$Main$update = F2(
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
-						{state: _user$project$Main$Paused}),
+						{
+							state: {play: _user$project$Main$Paused, boardCode: model.state.boardCode}
+						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			case 'Stop':
@@ -9228,18 +9282,31 @@ var _user$project$Main$update = F2(
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
-						{state: _user$project$Main$Stopped, cellgrid: model.startGrid, rounds: 0}),
+						{
+							state: {play: _user$project$Main$Stopped, boardCode: model.state.boardCode},
+							cellgrid: model.startGrid,
+							rounds: 0
+						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			case 'Tick':
-				var _p1 = model.state;
+				var _p1 = model.state.play;
 				if (_p1.ctor === 'Playing') {
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
-								cellgrid: _user$project$Main$evolve(model.cellgrid),
+								cellgrid: A2(
+									_user$project$Grid$indexedMap,
+									F2(
+										function (index, c) {
+											return A2(
+												_user$project$GameOfLife$evolveCell,
+												c,
+												A2(_user$project$Grid$neighbours, index, model.cellgrid));
+										}),
+									model.cellgrid),
 								rounds: model.rounds + 1
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
@@ -9250,7 +9317,7 @@ var _user$project$Main$update = F2(
 			case 'Click':
 				var _p4 = _p0._0._1;
 				var _p3 = _p0._0._0;
-				var _p2 = model.state;
+				var _p2 = model.state.play;
 				if (_p2.ctor === 'Stopped') {
 					return {
 						ctor: '_Tuple2',
@@ -9274,7 +9341,7 @@ var _user$project$Main$update = F2(
 					return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 				}
 			case 'IncSize':
-				var _p5 = model.state;
+				var _p5 = model.state.play;
 				if (_p5.ctor === 'Stopped') {
 					return {
 						ctor: '_Tuple2',
@@ -9290,7 +9357,7 @@ var _user$project$Main$update = F2(
 					return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 				}
 			case 'DecSize':
-				var _p6 = model.state;
+				var _p6 = model.state.play;
 				if (_p6.ctor === 'Stopped') {
 					return {
 						ctor: '_Tuple2',
@@ -9305,8 +9372,8 @@ var _user$project$Main$update = F2(
 				} else {
 					return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 				}
-			default:
-				var _p7 = model.state;
+			case 'Clear':
+				var _p7 = model.state.play;
 				if (_p7.ctor === 'Stopped') {
 					return {
 						ctor: '_Tuple2',
@@ -9329,15 +9396,40 @@ var _user$project$Main$update = F2(
 				} else {
 					return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 				}
+			default:
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							state: {boardCode: !model.state.boardCode, play: model.state.play}
+						}),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
 		}
 	});
+var _user$project$Main$ToggleBoardCode = {ctor: 'ToggleBoardCode'};
 var _user$project$Main$Clear = {ctor: 'Clear'};
 var _user$project$Main$DecSize = {ctor: 'DecSize'};
 var _user$project$Main$IncSize = {ctor: 'IncSize'};
 var _user$project$Main$Stop = {ctor: 'Stop'};
 var _user$project$Main$Pause = {ctor: 'Pause'};
 var _user$project$Main$Play = {ctor: 'Play'};
-var _user$project$Main$buttonsFor = function (state) {
+var _user$project$Main$buttonsFor = function (m) {
+	var boardCodeVal = A2(_user$project$Grid$pickle, _user$project$GameOfLife$pickleCell, m.cellgrid);
+	var boardCodeDisplay = m.state.boardCode ? 'none' : 'initial';
+	var showBoardCode = A2(
+		_elm_lang$html$Html$button,
+		{
+			ctor: '::',
+			_0: _elm_lang$html$Html_Events$onClick(_user$project$Main$ToggleBoardCode),
+			_1: {ctor: '[]'}
+		},
+		{
+			ctor: '::',
+			_0: _elm_lang$html$Html$text('Show/hide board code'),
+			_1: {ctor: '[]'}
+		});
 	var clear = A2(
 		_elm_lang$html$Html$button,
 		{
@@ -9410,47 +9502,76 @@ var _user$project$Main$buttonsFor = function (state) {
 			_0: _elm_lang$html$Html$text('Stop'),
 			_1: {ctor: '[]'}
 		});
-	var _p8 = state;
-	switch (_p8.ctor) {
-		case 'Stopped':
-			return {
-				ctor: '::',
-				_0: play,
-				_1: {
-					ctor: '::',
-					_0: plus,
-					_1: {
+	return A2(
+		_elm_lang$core$Basics_ops['++'],
+		function () {
+			var _p8 = m.state.play;
+			switch (_p8.ctor) {
+				case 'Stopped':
+					return {
 						ctor: '::',
-						_0: minus,
+						_0: play,
 						_1: {
 							ctor: '::',
-							_0: clear,
+							_0: plus,
+							_1: {
+								ctor: '::',
+								_0: minus,
+								_1: {
+									ctor: '::',
+									_0: clear,
+									_1: {
+										ctor: '::',
+										_0: showBoardCode,
+										_1: {ctor: '[]'}
+									}
+								}
+							}
+						}
+					};
+				case 'Playing':
+					return {
+						ctor: '::',
+						_0: pause,
+						_1: {
+							ctor: '::',
+							_0: stop,
 							_1: {ctor: '[]'}
 						}
+					};
+				default:
+					return {
+						ctor: '::',
+						_0: play,
+						_1: {
+							ctor: '::',
+							_0: stop,
+							_1: {ctor: '[]'}
+						}
+					};
+			}
+		}(),
+		{
+			ctor: '::',
+			_0: A2(
+				_elm_lang$html$Html$input,
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html_Attributes$style(
+						{
+							ctor: '::',
+							_0: {ctor: '_Tuple2', _0: 'display', _1: boardCodeDisplay},
+							_1: {ctor: '[]'}
+						}),
+					_1: {
+						ctor: '::',
+						_0: _elm_lang$html$Html_Attributes$value(boardCodeVal),
+						_1: {ctor: '[]'}
 					}
-				}
-			};
-		case 'Playing':
-			return {
-				ctor: '::',
-				_0: pause,
-				_1: {
-					ctor: '::',
-					_0: stop,
-					_1: {ctor: '[]'}
-				}
-			};
-		default:
-			return {
-				ctor: '::',
-				_0: play,
-				_1: {
-					ctor: '::',
-					_0: stop,
-					_1: {ctor: '[]'}
-				}
-			};
-	}
+				},
+				{ctor: '[]'}),
+			_1: {ctor: '[]'}
+		});
 };
 var _user$project$Main$Click = function (a) {
 	return {ctor: 'Click', _0: a};
@@ -9509,7 +9630,7 @@ var _user$project$Main$view = function (model) {
 					_0: _elm_lang$html$Html_Attributes$class('buttons'),
 					_1: {ctor: '[]'}
 				},
-				_user$project$Main$buttonsFor(model.state)),
+				_user$project$Main$buttonsFor(model)),
 			_1: {
 				ctor: '::',
 				_0: A2(
