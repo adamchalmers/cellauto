@@ -29,7 +29,7 @@ type alias Model =
     }
 
 globals =
-    { numRows = 3
+    { numRows = 30
     , cellWidth = "10px"
     }
 
