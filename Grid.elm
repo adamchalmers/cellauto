@@ -114,6 +114,7 @@ decSize g =
 
 pickle : (a -> String) -> Grid a -> String
 -- Turns the grid into a single String. Takes a helper function to map individual cell values to strings.
+-- For example, pickle cellToString g = "2#!#0:0:D,0:1:L,1:0:L,1:1:D"
 pickle f g =
     let
         contents = L.concat (toLists <| indexedMap (\(i,j) val -> (toString i) ++ indxDelimiter ++ (toString j) ++ indxDelimiter ++ (f val)) g)
@@ -124,6 +125,8 @@ headOfTail : List a -> Maybe a
 headOfTail = List.tail >> (Maybe.andThen List.head)
 
 unpickle: a -> (String -> a) -> String -> Result String (Grid a)
+-- Turns a string produced by pickle into a grid.
+-- For example, unpickle cell cellParser "2#!#0:0:D,0:1:L,1:0:L,1:1:D" = a 2x2 grid.
 unpickle val unpickler s =
     let
         stubGrid : Result String (Grid a)
