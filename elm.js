@@ -9361,7 +9361,7 @@ var _user$project$Grid$unpickle = F3(
 		}
 	});
 
-var _user$project$Main$globals = {numRows: 3, cellWidth: '10px'};
+var _user$project$Main$globals = {numRows: 30, cellWidth: '10px'};
 var _user$project$Main$initGrid = A3(_user$project$Grid$initAs, _user$project$GameOfLife$initBoard, _user$project$Main$globals.numRows, _user$project$Main$globals.numRows);
 var _user$project$Main$State = F2(
 	function (a, b) {
