@@ -8974,6 +8974,12 @@ var _user$project$Grid$row = F2(
 				_elm_lang$core$Array$get(i),
 				grid));
 	});
+var _user$project$Grid$headOfTail = function (l) {
+	return A2(
+		_elm_lang$core$Maybe$andThen,
+		_elm_lang$core$List$head,
+		_elm_lang$core$List$tail(l));
+};
 var _user$project$Grid$decSize = function (g) {
 	var shrunkRows = A2(
 		_elm_lang$core$Array$map,
@@ -9240,123 +9246,108 @@ var _user$project$Grid$pickle = F2(
 	});
 var _user$project$Grid$unpickle = F3(
 	function (val, unpickler, s) {
-		var f = function (l) {
-			var _p17 = l;
-			if ((((_p17.ctor === '::') && (_p17._1.ctor === '::')) && (_p17._1._1.ctor === '::')) && (_p17._1._1._1.ctor === '[]')) {
-				return _elm_lang$core$Maybe$Just(
-					{
-						ctor: '_Tuple2',
-						_0: {
-							ctor: '_Tuple2',
-							_0: _elm_lang$core$String$toInt(_p17._0),
-							_1: _elm_lang$core$String$toInt(_p17._1._0)
-						},
-						_1: _p17._1._1._0
-					});
-			} else {
-				return _elm_lang$core$Maybe$Nothing;
-			}
-		};
-		var contents = function () {
-			var _p18 = _elm_lang$core$List$tail(
-				A2(_elm_lang$core$String$split, _user$project$Grid$mainDelimiter, s));
-			if (_p18.ctor === 'Nothing') {
-				return _elm_lang$core$Result$Err('Couldn\'t get the tail of the list.');
-			} else {
-				return _elm_lang$core$Result$Ok(
-					_elm_lang$core$List$concat(
+		var converter = function (_p17) {
+			return _elm_lang$core$Dict$fromList(
+				A2(
+					_elm_lang$core$List$filterMap,
+					function (_p18) {
+						var _p19 = _p18;
+						var _p20 = {ctor: '_Tuple2', _0: _p19._0._0, _1: _p19._0._1};
+						if (((_p20.ctor === '_Tuple2') && (_p20._0.ctor === 'Ok')) && (_p20._1.ctor === 'Ok')) {
+							return _elm_lang$core$Maybe$Just(
+								{
+									ctor: '_Tuple2',
+									_0: {ctor: '_Tuple2', _0: _p20._0._0, _1: _p20._1._0},
+									_1: unpickler(_p19._1)
+								});
+						} else {
+							return _elm_lang$core$Maybe$Nothing;
+						}
+					},
+					A2(
+						_elm_lang$core$List$filterMap,
+						_elm_lang$core$Basics$identity,
 						A2(
 							_elm_lang$core$List$map,
-							function (s) {
-								return A2(
-									_elm_lang$core$List$map,
-									_elm_lang$core$String$split(_user$project$Grid$indxDelimiter),
-									s);
-							},
-							A2(
-								_elm_lang$core$List$map,
-								_elm_lang$core$String$split(_user$project$Grid$cellDelimiter),
-								_p18._0))));
-			}
-		}();
-		var dict = function () {
-			var _p19 = contents;
-			if (_p19.ctor === 'Err') {
-				return _elm_lang$core$Result$Err(_p19._0);
-			} else {
-				return _elm_lang$core$Result$Ok(
-					_elm_lang$core$Dict$fromList(
-						A2(
-							_elm_lang$core$List$filterMap,
-							function (_p20) {
-								var _p21 = _p20;
-								var _p22 = {ctor: '_Tuple2', _0: _p21._0._0, _1: _p21._0._1};
-								if (((_p22.ctor === '_Tuple2') && (_p22._0.ctor === 'Ok')) && (_p22._1.ctor === 'Ok')) {
+							function (l) {
+								var _p21 = l;
+								if ((((_p21.ctor === '::') && (_p21._1.ctor === '::')) && (_p21._1._1.ctor === '::')) && (_p21._1._1._1.ctor === '[]')) {
 									return _elm_lang$core$Maybe$Just(
 										{
 											ctor: '_Tuple2',
-											_0: {ctor: '_Tuple2', _0: _p22._0._0, _1: _p22._1._0},
-											_1: unpickler(_p21._1)
+											_0: {
+												ctor: '_Tuple2',
+												_0: _elm_lang$core$String$toInt(_p21._0),
+												_1: _elm_lang$core$String$toInt(_p21._1._0)
+											},
+											_1: _p21._1._1._0
 										});
 								} else {
 									return _elm_lang$core$Maybe$Nothing;
 								}
 							},
-							A2(
-								_elm_lang$core$List$filterMap,
-								_elm_lang$core$Basics$identity,
-								A2(_elm_lang$core$List$map, f, _p19._0)))));
-			}
-		}();
-		var len = function () {
-			var _p23 = _elm_lang$core$List$head(
-				A2(_elm_lang$core$String$split, _user$project$Grid$mainDelimiter, s));
-			if (_p23.ctor === 'Nothing') {
-				return _elm_lang$core$Result$Err('couldn\'t get gridsize');
-			} else {
-				return _elm_lang$core$String$toInt(_p23._0);
-			}
-		}();
-		var base = function () {
-			var _p24 = len;
-			if (_p24.ctor === 'Err') {
-				return _elm_lang$core$Result$Err(_p24._0);
-			} else {
-				var _p25 = _p24._0;
-				return _elm_lang$core$Result$Ok(
-					A3(_user$project$Grid$init, val, _p25, _p25));
-			}
-		}();
-		var _p26 = {ctor: '_Tuple2', _0: base, _1: dict};
-		if (_p26._0.ctor === 'Err') {
-			if (_p26._1.ctor === 'Ok') {
-				return _elm_lang$core$Result$Err(_p26._0._0);
+							_p17))));
+		};
+		var splitter = function (_p22) {
+			return A2(
+				_elm_lang$core$List$map,
+				_elm_lang$core$String$split(_user$project$Grid$indxDelimiter),
+				A2(_elm_lang$core$String$split, _user$project$Grid$cellDelimiter, _p22));
+		};
+		var dict = A2(
+			_elm_lang$core$Result$map,
+			converter,
+			A2(
+				_elm_lang$core$Result$map,
+				splitter,
+				A2(
+					_elm_lang$core$Result$fromMaybe,
+					'Couldn\'t get list tail (grid contents).',
+					_user$project$Grid$headOfTail(
+						A2(_elm_lang$core$String$split, _user$project$Grid$mainDelimiter, s)))));
+		var stubGrid = A2(
+			_elm_lang$core$Result$map,
+			function (n) {
+				return A3(_user$project$Grid$init, val, n, n);
+			},
+			A2(
+				_elm_lang$core$Result$andThen,
+				_elm_lang$core$String$toInt,
+				A2(
+					_elm_lang$core$Result$fromMaybe,
+					'couldn\'t get list head (grid size)',
+					_elm_lang$core$List$head(
+						A2(_elm_lang$core$String$split, _user$project$Grid$mainDelimiter, s)))));
+		var _p23 = {ctor: '_Tuple2', _0: stubGrid, _1: dict};
+		if (_p23._0.ctor === 'Err') {
+			if (_p23._1.ctor === 'Ok') {
+				return _elm_lang$core$Result$Err(_p23._0._0);
 			} else {
 				return _elm_lang$core$Result$Err(
 					A2(
 						_elm_lang$core$Basics_ops['++'],
-						_p26._0._0,
-						A2(_elm_lang$core$Basics_ops['++'], '. Also: ', _p26._1._0)));
+						_p23._0._0,
+						A2(_elm_lang$core$Basics_ops['++'], '. Also: ', _p23._1._0)));
 			}
 		} else {
-			if (_p26._1.ctor === 'Err') {
-				return _elm_lang$core$Result$Err(_p26._1._0);
+			if (_p23._1.ctor === 'Err') {
+				return _elm_lang$core$Result$Err(_p23._1._0);
 			} else {
 				return _elm_lang$core$Result$Ok(
 					A2(
 						_user$project$Grid$indexedMap,
 						F2(
-							function (_p27, cell) {
-								var _p28 = _p27;
+							function (_p24, cell) {
+								var _p25 = _p24;
 								return A2(
 									_elm_lang$core$Maybe$withDefault,
 									cell,
 									A2(
 										_elm_lang$core$Dict$get,
-										{ctor: '_Tuple2', _0: _p28._0, _1: _p28._1},
-										_p26._1._0));
+										{ctor: '_Tuple2', _0: _p25._0, _1: _p25._1},
+										_p23._1._0));
 							}),
-						_p26._0._0));
+						_p23._0._0));
 			}
 		}
 	});

@@ -2,7 +2,7 @@ module Grid exposing (Grid, Index, init, initAs, pickle, unpickle, map, indexedM
 
 import Array as A
 import List as L
-import Maybe exposing (andThen)
+import Maybe
 import String
 import Dict
 
@@ -50,7 +50,7 @@ toLists : Grid a -> List (List a)
 toLists g = A.toList <| A.map (A.toList) g
 
 get : Index -> Grid a -> Maybe a
-get (i, j) grid = (A.get j grid) |> andThen (A.get i)
+get (i, j) grid = (A.get j grid) |> Maybe.andThen (A.get i)
 
 set : Index -> a -> Grid a -> Grid a
 set (j, i) val grid =
@@ -120,34 +120,41 @@ pickle f g =
     in
         String.concat <| ((toString <| length g)++mainDelimiter)::(L.intersperse cellDelimiter contents)
 
+headOfTail : List a -> Maybe a
+headOfTail l = List.tail l |> Maybe.andThen List.head
+
 unpickle: a -> (String -> a) -> String -> Result String (Grid a)
 unpickle val unpickler s =
     let
-        len = case List.head <| String.split mainDelimiter s of
-            Nothing -> Err "couldn't get gridsize"
-            Just s -> String.toInt s
-        base = case len of
-            Err s -> Err s
-            Ok n -> Ok (init val n n)
-        contents =
-            case (List.tail <| String.split mainDelimiter s) of
-                Nothing ->
-                    Err "Couldn't get the tail of the list."
-                Just cells ->
-                    Ok <| List.concat <| List.map (\s -> List.map (String.split indxDelimiter) s) <| List.map (String.split cellDelimiter) cells
-        f l = case l of
-            [i, j, val] -> Just ((String.toInt i, String.toInt j), val)
-            _ -> Nothing
-        dict = case contents of
-            Err s -> Err s
-            Ok c -> Ok (Dict.fromList <| List.filterMap (\((r1, r2), s) ->
-                case (r1, r2) of
-                    (Ok v1, Ok v2) -> Just ((v1, v2), (unpickler s))
-                    _ -> Nothing
-            ) <| List.filterMap identity <| List.map f c)
+        stubGrid : Result String (Grid a)
+        stubGrid =
+            Result.fromMaybe "couldn't get list head (grid size)" (List.head <| String.split mainDelimiter s)
+            |> Result.andThen (String.toInt)
+            |> Result.map (\n -> init val n n)
 
+        dict : Result String (Dict.Dict (Int, Int) a)
+        dict =
+            Result.fromMaybe "Couldn't get list tail (grid contents)." (headOfTail <| String.split mainDelimiter s)
+            |> Result.map splitter
+            |> Result.map converter
+
+        splitter : String -> List (List String)
+        splitter =
+            String.split cellDelimiter
+            >> List.map (String.split indxDelimiter)
+
+        converter : List (List String) -> Dict.Dict (Int, Int) a
+        converter =
+            List.map (\l -> case l of
+                    [i, j, val] ->  Just ((String.toInt i, String.toInt j), val)
+                    _ -> Nothing)
+            >> List.filterMap identity
+            >> List.filterMap (\((r1, r2), s) -> case (r1, r2) of
+                    (Ok v1, Ok v2) -> Just ((v1, v2), (unpickler s))
+                    _ -> Nothing)
+            >> Dict.fromList
     in
-        case (base, dict) of
+        case (stubGrid, dict) of
             (Err s, Ok _) -> Err s
             (Ok _, Err s) -> Err s
             (Err s, Err t) -> Err (s ++ ". Also: " ++ t)
