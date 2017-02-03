@@ -1,7 +1,7 @@
 module Main exposing (..)
 
 import Html exposing (..)
-import Html.Attributes exposing (style, class, value, placeholder, id)
+import Html.Attributes exposing (style, class, value, placeholder, id, href)
 import Html.Events exposing (onClick, onInput)
 import List as L
 import Time
@@ -31,6 +31,7 @@ type alias Model =
 globals =
     { numRows = 30
     , cellWidth = "10px"
+    , gh = "https://github.com/adamchalmers/cellauto"
     }
 
 initGrid : CellGrid
@@ -186,12 +187,12 @@ update msg model =
 view : Model -> Html Msg
 view model =
     div []
-        [ table []
+        [ table [ id "controls" ]
             [ tr [] (buttonsFor model)
             , tr [] [codeLoadSaveGui model]
-            , tr [] [ text ("Time: " ++ (toString model.rounds))]
             ]
         , table [ id "cellautogrid" ] (cellGridRows model.cellgrid)
+        , p [ id "footer" ] [ text "A cellular automaton simulator, built in Elm. ", Html.a [href globals.gh] [text "(Github)"] ]
         ]
 
 cellGridRows : G.Grid Cell -> List (Html Msg)
@@ -214,11 +215,12 @@ buttonsFor m =
         plus = button [onClick IncSize] [text "+ Row"]
         minus = button [onClick DecSize] [text "- Row"]
         clear = button [onClick Clear] [text "Clear board"]
+        time = text ("Time: " ++ (toString m.rounds))
     in
         case m.state.play of
             Stopped -> [play, plus, minus, clear]
-            Playing -> [pause, stop]
-            Paused -> [play, stop]
+            Playing -> [pause, stop, time]
+            Paused -> [play, stop, time]
 
 codeLoadSaveGui : Model -> Html Msg
 codeLoadSaveGui m =

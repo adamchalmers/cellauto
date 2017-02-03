@@ -9349,7 +9349,7 @@ var _user$project$Grid$unpickle = F3(
 			dict);
 	});
 
-var _user$project$Main$globals = {numRows: 30, cellWidth: '10px'};
+var _user$project$Main$globals = {numRows: 30, cellWidth: '10px', gh: 'https://github.com/adamchalmers/cellauto'};
 var _user$project$Main$initGrid = A3(_user$project$Grid$initAs, _user$project$GameOfLife$initBoard, _user$project$Main$globals.numRows, _user$project$Main$globals.numRows);
 var _user$project$Main$State = F2(
 	function (a, b) {
@@ -9674,6 +9674,11 @@ var _user$project$Main$Stop = {ctor: 'Stop'};
 var _user$project$Main$Pause = {ctor: 'Pause'};
 var _user$project$Main$Play = {ctor: 'Play'};
 var _user$project$Main$buttonsFor = function (m) {
+	var time = _elm_lang$html$Html$text(
+		A2(
+			_elm_lang$core$Basics_ops['++'],
+			'Time: ',
+			_elm_lang$core$Basics$toString(m.rounds)));
 	var clear = A2(
 		_elm_lang$html$Html$button,
 		{
@@ -9773,7 +9778,11 @@ var _user$project$Main$buttonsFor = function (m) {
 				_1: {
 					ctor: '::',
 					_0: stop,
-					_1: {ctor: '[]'}
+					_1: {
+						ctor: '::',
+						_0: time,
+						_1: {ctor: '[]'}
+					}
 				}
 			};
 		default:
@@ -9783,7 +9792,11 @@ var _user$project$Main$buttonsFor = function (m) {
 				_1: {
 					ctor: '::',
 					_0: stop,
-					_1: {ctor: '[]'}
+					_1: {
+						ctor: '::',
+						_0: time,
+						_1: {ctor: '[]'}
+					}
 				}
 			};
 	}
@@ -9837,7 +9850,11 @@ var _user$project$Main$view = function (model) {
 			ctor: '::',
 			_0: A2(
 				_elm_lang$html$Html$table,
-				{ctor: '[]'},
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html_Attributes$id('controls'),
+					_1: {ctor: '[]'}
+				},
 				{
 					ctor: '::',
 					_0: A2(
@@ -9854,22 +9871,7 @@ var _user$project$Main$view = function (model) {
 								_0: _user$project$Main$codeLoadSaveGui(model),
 								_1: {ctor: '[]'}
 							}),
-						_1: {
-							ctor: '::',
-							_0: A2(
-								_elm_lang$html$Html$tr,
-								{ctor: '[]'},
-								{
-									ctor: '::',
-									_0: _elm_lang$html$Html$text(
-										A2(
-											_elm_lang$core$Basics_ops['++'],
-											'Time: ',
-											_elm_lang$core$Basics$toString(model.rounds))),
-									_1: {ctor: '[]'}
-								}),
-							_1: {ctor: '[]'}
-						}
+						_1: {ctor: '[]'}
 					}
 				}),
 			_1: {
@@ -9882,7 +9884,37 @@ var _user$project$Main$view = function (model) {
 						_1: {ctor: '[]'}
 					},
 					_user$project$Main$cellGridRows(model.cellgrid)),
-				_1: {ctor: '[]'}
+				_1: {
+					ctor: '::',
+					_0: A2(
+						_elm_lang$html$Html$p,
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html_Attributes$id('footer'),
+							_1: {ctor: '[]'}
+						},
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html$text('A cellular automaton simulator, built in Elm. '),
+							_1: {
+								ctor: '::',
+								_0: A2(
+									_elm_lang$html$Html$a,
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html_Attributes$href(_user$project$Main$globals.gh),
+										_1: {ctor: '[]'}
+									},
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html$text('(Github)'),
+										_1: {ctor: '[]'}
+									}),
+								_1: {ctor: '[]'}
+							}
+						}),
+					_1: {ctor: '[]'}
+				}
 			}
 		});
 };
