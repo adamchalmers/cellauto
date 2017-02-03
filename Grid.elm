@@ -121,7 +121,7 @@ pickle f g =
         String.concat <| ((toString <| length g)++mainDelimiter)::(L.intersperse cellDelimiter contents)
 
 headOfTail : List a -> Maybe a
-headOfTail l = List.tail l |> Maybe.andThen List.head
+headOfTail = List.tail >> (Maybe.andThen List.head)
 
 unpickle: a -> (String -> a) -> String -> Result String (Grid a)
 unpickle val unpickler s =
@@ -136,15 +136,18 @@ unpickle val unpickler s =
         dict =
             Result.fromMaybe "Couldn't get list tail (grid contents)." (headOfTail <| String.split mainDelimiter s)
             |> Result.map splitter
-            |> Result.map converter
+            |> Result.map toTuples
+            |> Result.map Dict.fromList
 
         splitter : String -> List (List String)
+        -- Splits a string into lists of [x, y, cell] (from serialisation)
         splitter =
             String.split cellDelimiter
             >> List.map (String.split indxDelimiter)
 
-        converter : List (List String) -> Dict.Dict (Int, Int) a
-        converter =
+        toTuples : List (List String) -> List ((Int, Int), a)
+        -- Maps [x, y, cell] lists to tuples and filters out any elements which don't fit.
+        toTuples =
             List.map (\l -> case l of
                     [i, j, val] ->  Just ((String.toInt i, String.toInt j), val)
                     _ -> Nothing)
@@ -152,13 +155,13 @@ unpickle val unpickler s =
             >> List.filterMap (\((r1, r2), s) -> case (r1, r2) of
                     (Ok v1, Ok v2) -> Just ((v1, v2), (unpickler s))
                     _ -> Nothing)
-            >> Dict.fromList
+
+        lookupIndex : (Dict.Dict (Int, Int) a) -> (Int, Int) -> a -> a
+        lookupIndex d (i,j) cell =
+            Dict.get (i,j) d |> (Maybe.withDefault cell)
+
     in
-        case (stubGrid, dict) of
-            (Err s, Ok _) -> Err s
-            (Ok _, Err s) -> Err s
-            (Err s, Err t) -> Err (s ++ ". Also: " ++ t)
-            (Ok b, Ok d) -> Ok <| indexedMap (\(i,j) cell -> Maybe.withDefault cell <| Dict.get (i,j) d) b
+        dict |> Result.andThen (\d -> Result.map (indexedMap (lookupIndex d)) stubGrid)
 
 -- UNEXPOSED FUNCTIONS
 
