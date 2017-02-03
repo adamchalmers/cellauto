@@ -1,20 +1,16 @@
 module Grid exposing (Grid, Index, init, initAs, pickle, unpickle, map, indexedMap, fromLists, toLists, get, set, transpose, length, height, neighbours, mutate, incSize, decSize)
 
 import Array as A
-import List as L
-import Maybe
-import String
 import Dict
-
-
--- EXPOSED FUNCTIONS
+import List as L
 
 type alias Grid a = A.Array (A.Array a)
 type alias Index = (Int, Int)
 
-mainDelimiter = "#!#"
-cellDelimiter = ","
-indxDelimiter = ":"
+-- Used for pickling/unpickling grids.
+(mainDelimiter, cellDelimiter, indxDelimiter) = ("#!#", ",", ":")
+
+-- EXPOSED FUNCTIONS
 
 length : Grid a -> Int
 length = A.length
@@ -54,12 +50,9 @@ get (i, j) grid = (A.get j grid) |> Maybe.andThen (A.get i)
 
 set : Index -> a -> Grid a -> Grid a
 set (j, i) val grid =
-    let
-        row = A.get i grid
-    in
-        case row of
-            Just r -> (A.set i (A.set j val r) grid)
-            Nothing -> grid
+    case A.get i grid of -- This expression is the row
+        Just r -> (A.set i (A.set j val r) grid) -- This extracts the right column cell.
+        Nothing -> grid
 
 mutate : Index -> (a -> a) -> Grid a -> Grid a
 -- mutate applies function (f) to the value at (index) if it exists.
@@ -71,15 +64,16 @@ mutate index f g =
             Nothing -> g
             Just val -> set index (f val) g
 
-transpose : Grid a -> Maybe (Grid a)
+transpose : Grid a -> Grid a
+-- Swaps a grid's rows and columns, for traversing in the other direction.
 transpose grid =
     let
         r = List.range 0 (-1 + length grid)
     in
-        Maybe.map A.fromList (unmaybeList <| List.map (\i -> row i grid) r)
-
+        A.fromList <| List.map (\i -> row i grid) r
 
 neighbours : Index -> Grid a -> List a
+-- Lists the values in whichever of the 8 possible neighbouring cells exist.
 neighbours (y, x) g =
     let
         cands =
@@ -91,6 +85,19 @@ neighbours (y, x) g =
             , get (x + 1, y - 1) g
             , get (x - 1, y + 1) g
             , get (x - 1, y - 1) g
+            ]
+    in
+        List.filterMap identity cands
+
+neighboursNoDiags : Index -> Grid a -> List a
+-- Lists the values in whichever of the 4 possible neighbouring cells exist.
+neighboursNoDiags (y, x) g =
+    let
+        cands =
+            [ get (x + 1, y) g
+            , get (x - 1, y) g
+            , get (x, y + 1) g
+            , get (x, y - 1) g
             ]
     in
         List.filterMap identity cands
@@ -117,12 +124,11 @@ pickle : (a -> String) -> Grid a -> String
 -- For example, pickle cellToString g = "2#!#0:0:D,0:1:L,1:0:L,1:1:D"
 pickle f g =
     let
-        contents = L.concat (toLists <| indexedMap (\(i,j) val -> (toString i) ++ indxDelimiter ++ (toString j) ++ indxDelimiter ++ (f val)) g)
+        serialise (i,j) val = (toString i) ++ indxDelimiter ++ (toString j) ++ indxDelimiter ++ (f val)
+        contents = indexedMap serialise g |> toLists |> L.concat |> L.intersperse cellDelimiter
+        len = length g |> toString
     in
-        String.concat <| ((toString <| length g)++mainDelimiter)::(L.intersperse cellDelimiter contents)
-
-headOfTail : List a -> Maybe a
-headOfTail = List.tail >> (Maybe.andThen List.head)
+        String.concat <| len::(mainDelimiter::contents)
 
 unpickle: a -> (String -> a) -> String -> Result String (Grid a)
 -- Turns a string produced by pickle into a grid.
@@ -130,12 +136,14 @@ unpickle: a -> (String -> a) -> String -> Result String (Grid a)
 unpickle val unpickler s =
     let
         stubGrid : Result String (Grid a)
+        -- The first few characters of the string are used to indicate grid size.
         stubGrid =
             Result.fromMaybe "couldn't get list head (grid size)" (List.head <| String.split mainDelimiter s)
             |> Result.andThen (String.toInt)
             |> Result.map (\n -> init val n n)
 
         dict : Result String (Dict.Dict (Int, Int) a)
+        -- The remaining characters of the string encode a dict from indices to grid values.
         dict =
             Result.fromMaybe "Couldn't get list tail (grid contents)." (headOfTail <| String.split mainDelimiter s)
             |> Result.map splitter
@@ -168,23 +176,15 @@ unpickle val unpickler s =
 
 -- UNEXPOSED FUNCTIONS
 
-row : Int -> Grid a -> Maybe (A.Array a)
-row i grid = unmaybeArray <| A.map (A.get i) grid
+row : Int -> Grid a -> A.Array a
+row i grid =
+    A.map (A.get i) grid
+    |> A.toList
+    |> List.filterMap identity
+    |> A.fromList
 
-unmaybeList : List (Maybe a) -> Maybe (List a)
-unmaybeList elems =
-    case elems of
-        [] ->
-            Just []
-        (e::es) ->
-            case (e, unmaybeList es) of
-                (_, Nothing) -> Nothing
-                (Nothing, _) -> Nothing
-                (Just x, Just xs) -> Just (x::xs)
-
-unmaybeArray : A.Array (Maybe a) -> Maybe (A.Array a)
-unmaybeArray arr =
-    Maybe.map A.fromList (unmaybeList <| (A.toList arr))
+headOfTail : List a -> Maybe a
+headOfTail = List.tail >> (Maybe.andThen List.head)
 
 flatten : Grid a -> List a
 flatten g = toLists g |> List.concat
