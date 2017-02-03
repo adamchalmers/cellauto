@@ -1,3 +1,5 @@
+-- Module for working with 2D arrays (grids or matrices).
+
 module Grid exposing (Grid, Index, init, initAs, pickle, unpickle, map, indexedMap, fromLists, toLists, get, set, transpose, length, height, neighbours, mutate, incSize, decSize)
 
 import Array as A

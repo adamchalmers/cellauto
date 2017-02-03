@@ -9190,8 +9190,8 @@ var _user$project$Grid$height = function (g) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Grid',
 			{
-				start: {line: 20, column: 5},
-				end: {line: 22, column: 37}
+				start: {line: 22, column: 5},
+				end: {line: 24, column: 37}
 			},
 			_p16)('Grid doesn\'t have a second dimension.');
 	} else {
