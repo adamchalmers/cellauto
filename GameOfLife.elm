@@ -37,14 +37,20 @@ evolveCell cell neighs =
     in
         case cell of
             Live ->
-                if numLive < 2 then
-                    Dead
-                else if (numLive == 2) || (numLive == 3) then
+                if Set.member numLive survive then
                     Live
                 else
                     Dead
             Dead ->
-                if numLive == 3 then
+                if Set.member numLive born then
                     Live
                 else
                     Dead
+
+survive : Set.Set Int
+-- How many neighbours must be alive for a Live cell to remain Live
+survive = Set.fromList [2, 3]
+
+born : Set.Set Int
+-- How many neighbours must be alive for a Dead cell to become Live
+born = Set.fromList [3]

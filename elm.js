@@ -8803,6 +8803,22 @@ var _elm_lang$html$Html_Events$Options = F2(
 		return {stopPropagation: a, preventDefault: b};
 	});
 
+var _user$project$GameOfLife$born = _elm_lang$core$Set$fromList(
+	{
+		ctor: '::',
+		_0: 3,
+		_1: {ctor: '[]'}
+	});
+var _user$project$GameOfLife$survive = _elm_lang$core$Set$fromList(
+	{
+		ctor: '::',
+		_0: 2,
+		_1: {
+			ctor: '::',
+			_0: 3,
+			_1: {ctor: '[]'}
+		}
+	});
 var _user$project$GameOfLife$Dead = {ctor: 'Dead'};
 var _user$project$GameOfLife$defaultCell = _user$project$GameOfLife$Dead;
 var _user$project$GameOfLife$Live = {ctor: 'Live'};
@@ -8890,9 +8906,9 @@ var _user$project$GameOfLife$evolveCell = F2(
 		var numLive = count(_user$project$GameOfLife$Live);
 		var _p3 = cell;
 		if (_p3.ctor === 'Live') {
-			return (_elm_lang$core$Native_Utils.cmp(numLive, 2) < 0) ? _user$project$GameOfLife$Dead : ((_elm_lang$core$Native_Utils.eq(numLive, 2) || _elm_lang$core$Native_Utils.eq(numLive, 3)) ? _user$project$GameOfLife$Live : _user$project$GameOfLife$Dead);
+			return A2(_elm_lang$core$Set$member, numLive, _user$project$GameOfLife$survive) ? _user$project$GameOfLife$Live : _user$project$GameOfLife$Dead;
 		} else {
-			return _elm_lang$core$Native_Utils.eq(numLive, 3) ? _user$project$GameOfLife$Live : _user$project$GameOfLife$Dead;
+			return A2(_elm_lang$core$Set$member, numLive, _user$project$GameOfLife$born) ? _user$project$GameOfLife$Live : _user$project$GameOfLife$Dead;
 		}
 	});
 
