@@ -1,8 +1,8 @@
 module Main exposing (..)
 
 import Html exposing (..)
-import Html.Attributes exposing (style, class, value)
-import Html.Events exposing (onClick)
+import Html.Attributes exposing (style, class, value, placeholder, id)
+import Html.Events exposing (onClick, onInput)
 import List as L
 import Time
 
@@ -24,10 +24,12 @@ type alias Model =
     , cellgrid: CellGrid
     , startGrid: CellGrid
     , rounds: Int
+    , msg: String
+    , pastedCode : String
     }
 
 globals =
-    { numRows = 30
+    { numRows = 3
     , cellWidth = "10px"
     }
 
@@ -40,6 +42,8 @@ init =
     ( { state = {play = Stopped, boardCode = True}
       , cellgrid = initGrid
       , startGrid = initGrid
+      , msg = ""
+      , pastedCode = ""
       , rounds = 0}
     , Cmd.none
     )
@@ -56,6 +60,8 @@ type Msg =
     | DecSize
     | Clear
     | ToggleBoardCode
+    | LoadBoard
+    | CodePasted String
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -151,29 +157,52 @@ update msg model =
         ToggleBoardCode ->
             ({model | state = {boardCode = not model.state.boardCode, play = model.state.play}}, Cmd.none)
 
+        LoadBoard ->
+            case model.state.play of
+
+            Stopped ->
+                case G.unpickle Rules.defaultCell Rules.unpickleCell model.pastedCode of
+                    Err s ->
+                        ( { model
+                          | msg = Debug.log "Unpickling: " s
+                          }
+                        , Cmd.none)
+                    Ok board ->
+                        ( { model
+                          | msg = "no error"
+                          , cellgrid = board
+                          , startGrid = board
+                          }
+                        , Cmd.none)
+
+
+            _ -> (model, Cmd.none)
+
+        CodePasted s ->
+            ( { model | pastedCode = s }, Cmd.none)
+
 -- VIEW
 
 view : Model -> Html Msg
 view model =
     div []
-        [ div [ class "buttons" ] (buttonsFor model)
-        , div [ class "rounds" ] [ text ("Time: " ++ (toString model.rounds))]
-        , cellGridTable model.cellgrid
+        [ table []
+            [ tr [] (buttonsFor model)
+            , tr [] [codeLoadSaveGui model]
+            , tr [] [ text ("Time: " ++ (toString model.rounds))]
+            ]
+        , table [ id "cellautogrid" ] (cellGridRows model.cellgrid)
         ]
 
-cellGridTable : CellGrid -> Html Msg
--- Visualise the cellular automaton grid as an HTML table.
-cellGridTable grid =
+cellGridRows : G.Grid Cell -> List (Html Msg)
+-- A list of <tr> elements for displaying the CA grid as an HTML table.
+cellGridRows grid =
     let
         row y r = tr [] <| L.indexedMap (\x -> tdFor (x, y)) r
         tdFor (x, y) cell =
-            td
-                [ onClick (Click (x, y))
-                , class (Rules.cssClass cell)
-                ]
-                []
+            td [ onClick (Click (x, y)), class (Rules.cssClass cell)] []
     in
-        table [] (L.indexedMap row <| G.toLists grid)
+        L.indexedMap row <| G.toLists grid
 
 buttonsFor : Model -> List (Html Msg)
 -- The state determines which GUI controls to show.
@@ -185,15 +214,22 @@ buttonsFor m =
         plus = button [onClick IncSize] [text "+ Row"]
         minus = button [onClick DecSize] [text "- Row"]
         clear = button [onClick Clear] [text "Clear board"]
-        showBoardCode = button [onClick ToggleBoardCode] [text "Show/hide board code"]
-        boardCodeDisplay = if m.state.boardCode then "none" else "initial"
-        boardCodeVal = G.pickle Rules.pickleCell m.cellgrid
     in
-        ( case m.state.play of
-          Stopped -> [play, plus, minus, clear, showBoardCode]
-          Playing -> [pause, stop]
-          Paused -> [play, stop]
-        ) ++ [ input [style <| [("display", boardCodeDisplay)], value boardCodeVal] [] ]
+        case m.state.play of
+            Stopped -> [play, plus, minus, clear]
+            Playing -> [pause, stop]
+            Paused -> [play, stop]
+
+codeLoadSaveGui : Model -> Html Msg
+codeLoadSaveGui m =
+        let
+            boardCodeVal = G.pickle Rules.pickleCell m.cellgrid
+        in
+            table []
+            [ tr [] [td [] [text "Your board: "], td [] [input [value boardCodeVal] []]]
+            , tr [] [td [] [text "Load board: "], td [] [input [placeholder "Paste board code here", onInput CodePasted] [], button [onClick LoadBoard] [text "Load"]]]
+            ]
+
 
 -- WIRING
 

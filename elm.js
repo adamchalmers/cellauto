@@ -8928,11 +8928,11 @@ var _user$project$GameOfLife$unpickleCell = function (str) {
 	var _p6 = str;
 	switch (_p6) {
 		case 'L':
-			return _elm_lang$core$Maybe$Just(_user$project$GameOfLife$Live);
+			return _user$project$GameOfLife$Live;
 		case 'D':
-			return _elm_lang$core$Maybe$Just(_user$project$GameOfLife$Dead);
+			return _user$project$GameOfLife$Dead;
 		default:
-			return _elm_lang$core$Maybe$Nothing;
+			return _user$project$GameOfLife$Dead;
 	}
 };
 
@@ -9136,35 +9136,6 @@ var _user$project$Grid$indexedMap = F2(
 			});
 		return A2(_elm_lang$core$Array$indexedMap, rowFn, grid);
 	});
-var _user$project$Grid$stringify = F2(
-	function (f, g) {
-		return A2(
-			_user$project$Grid$indexedMap,
-			F2(
-				function (index, val) {
-					return A2(
-						_elm_lang$core$Basics_ops['++'],
-						'{',
-						A2(
-							_elm_lang$core$Basics_ops['++'],
-							_elm_lang$core$Basics$toString(index),
-							A2(
-								_elm_lang$core$Basics_ops['++'],
-								':',
-								A2(
-									_elm_lang$core$Basics_ops['++'],
-									f(val),
-									'}'))));
-				}),
-			g);
-	});
-var _user$project$Grid$pickle = F2(
-	function (f, g) {
-		return _elm_lang$core$String$concat(
-			_elm_lang$core$List$concat(
-				_user$project$Grid$toLists(
-					A2(_user$project$Grid$stringify, f, g))));
-	});
 var _user$project$Grid$map = F2(
 	function (f, grid) {
 		return A2(
@@ -9204,8 +9175,8 @@ var _user$project$Grid$height = function (g) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Grid',
 			{
-				start: {line: 19, column: 5},
-				end: {line: 21, column: 37}
+				start: {line: 24, column: 5},
+				end: {line: 26, column: 37}
 			},
 			_p13)('Grid doesn\'t have a second dimension.');
 	} else {
@@ -9229,16 +9200,176 @@ var _user$project$Grid$transpose = function (grid) {
 				},
 				r)));
 };
+var _user$project$Grid$indxDelimiter = ':';
+var _user$project$Grid$cellDelimiter = ',';
+var _user$project$Grid$mainDelimiter = '#!#';
+var _user$project$Grid$pickle = F2(
+	function (f, g) {
+		var contents = _elm_lang$core$List$concat(
+			_user$project$Grid$toLists(
+				A2(
+					_user$project$Grid$indexedMap,
+					F2(
+						function (_p15, val) {
+							var _p16 = _p15;
+							return A2(
+								_elm_lang$core$Basics_ops['++'],
+								_elm_lang$core$Basics$toString(_p16._0),
+								A2(
+									_elm_lang$core$Basics_ops['++'],
+									_user$project$Grid$indxDelimiter,
+									A2(
+										_elm_lang$core$Basics_ops['++'],
+										_elm_lang$core$Basics$toString(_p16._1),
+										A2(
+											_elm_lang$core$Basics_ops['++'],
+											_user$project$Grid$indxDelimiter,
+											f(val)))));
+						}),
+					g)));
+		return _elm_lang$core$String$concat(
+			{
+				ctor: '::',
+				_0: A2(
+					_elm_lang$core$Basics_ops['++'],
+					_elm_lang$core$Basics$toString(
+						_user$project$Grid$length(g)),
+					_user$project$Grid$mainDelimiter),
+				_1: A2(_elm_lang$core$List$intersperse, _user$project$Grid$cellDelimiter, contents)
+			});
+	});
+var _user$project$Grid$unpickle = F3(
+	function (val, unpickler, s) {
+		var f = function (l) {
+			var _p17 = l;
+			if ((((_p17.ctor === '::') && (_p17._1.ctor === '::')) && (_p17._1._1.ctor === '::')) && (_p17._1._1._1.ctor === '[]')) {
+				return _elm_lang$core$Maybe$Just(
+					{
+						ctor: '_Tuple2',
+						_0: {
+							ctor: '_Tuple2',
+							_0: _elm_lang$core$String$toInt(_p17._0),
+							_1: _elm_lang$core$String$toInt(_p17._1._0)
+						},
+						_1: _p17._1._1._0
+					});
+			} else {
+				return _elm_lang$core$Maybe$Nothing;
+			}
+		};
+		var contents = function () {
+			var _p18 = _elm_lang$core$List$tail(
+				A2(_elm_lang$core$String$split, _user$project$Grid$mainDelimiter, s));
+			if (_p18.ctor === 'Nothing') {
+				return _elm_lang$core$Result$Err('Couldn\'t get the tail of the list.');
+			} else {
+				return _elm_lang$core$Result$Ok(
+					_elm_lang$core$List$concat(
+						A2(
+							_elm_lang$core$List$map,
+							function (s) {
+								return A2(
+									_elm_lang$core$List$map,
+									_elm_lang$core$String$split(_user$project$Grid$indxDelimiter),
+									s);
+							},
+							A2(
+								_elm_lang$core$List$map,
+								_elm_lang$core$String$split(_user$project$Grid$cellDelimiter),
+								_p18._0))));
+			}
+		}();
+		var dict = function () {
+			var _p19 = contents;
+			if (_p19.ctor === 'Err') {
+				return _elm_lang$core$Result$Err(_p19._0);
+			} else {
+				return _elm_lang$core$Result$Ok(
+					_elm_lang$core$Dict$fromList(
+						A2(
+							_elm_lang$core$List$filterMap,
+							function (_p20) {
+								var _p21 = _p20;
+								var _p22 = {ctor: '_Tuple2', _0: _p21._0._0, _1: _p21._0._1};
+								if (((_p22.ctor === '_Tuple2') && (_p22._0.ctor === 'Ok')) && (_p22._1.ctor === 'Ok')) {
+									return _elm_lang$core$Maybe$Just(
+										{
+											ctor: '_Tuple2',
+											_0: {ctor: '_Tuple2', _0: _p22._0._0, _1: _p22._1._0},
+											_1: unpickler(_p21._1)
+										});
+								} else {
+									return _elm_lang$core$Maybe$Nothing;
+								}
+							},
+							A2(
+								_elm_lang$core$List$filterMap,
+								_elm_lang$core$Basics$identity,
+								A2(_elm_lang$core$List$map, f, _p19._0)))));
+			}
+		}();
+		var len = function () {
+			var _p23 = _elm_lang$core$List$head(
+				A2(_elm_lang$core$String$split, _user$project$Grid$mainDelimiter, s));
+			if (_p23.ctor === 'Nothing') {
+				return _elm_lang$core$Result$Err('couldn\'t get gridsize');
+			} else {
+				return _elm_lang$core$String$toInt(_p23._0);
+			}
+		}();
+		var base = function () {
+			var _p24 = len;
+			if (_p24.ctor === 'Err') {
+				return _elm_lang$core$Result$Err(_p24._0);
+			} else {
+				var _p25 = _p24._0;
+				return _elm_lang$core$Result$Ok(
+					A3(_user$project$Grid$init, val, _p25, _p25));
+			}
+		}();
+		var _p26 = {ctor: '_Tuple2', _0: base, _1: dict};
+		if (_p26._0.ctor === 'Err') {
+			if (_p26._1.ctor === 'Ok') {
+				return _elm_lang$core$Result$Err(_p26._0._0);
+			} else {
+				return _elm_lang$core$Result$Err(
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						_p26._0._0,
+						A2(_elm_lang$core$Basics_ops['++'], '. Also: ', _p26._1._0)));
+			}
+		} else {
+			if (_p26._1.ctor === 'Err') {
+				return _elm_lang$core$Result$Err(_p26._1._0);
+			} else {
+				return _elm_lang$core$Result$Ok(
+					A2(
+						_user$project$Grid$indexedMap,
+						F2(
+							function (_p27, cell) {
+								var _p28 = _p27;
+								return A2(
+									_elm_lang$core$Maybe$withDefault,
+									cell,
+									A2(
+										_elm_lang$core$Dict$get,
+										{ctor: '_Tuple2', _0: _p28._0, _1: _p28._1},
+										_p26._1._0));
+							}),
+						_p26._0._0));
+			}
+		}
+	});
 
-var _user$project$Main$globals = {numRows: 30, cellWidth: '10px'};
+var _user$project$Main$globals = {numRows: 3, cellWidth: '10px'};
 var _user$project$Main$initGrid = A3(_user$project$Grid$initAs, _user$project$GameOfLife$initBoard, _user$project$Main$globals.numRows, _user$project$Main$globals.numRows);
 var _user$project$Main$State = F2(
 	function (a, b) {
 		return {play: a, boardCode: b};
 	});
-var _user$project$Main$Model = F4(
-	function (a, b, c, d) {
-		return {state: a, cellgrid: b, startGrid: c, rounds: d};
+var _user$project$Main$Model = F6(
+	function (a, b, c, d, e, f) {
+		return {state: a, cellgrid: b, startGrid: c, rounds: d, msg: e, pastedCode: f};
 	});
 var _user$project$Main$Paused = {ctor: 'Paused'};
 var _user$project$Main$Playing = {ctor: 'Playing'};
@@ -9249,6 +9380,8 @@ var _user$project$Main$init = {
 		state: {play: _user$project$Main$Stopped, boardCode: true},
 		cellgrid: _user$project$Main$initGrid,
 		startGrid: _user$project$Main$initGrid,
+		msg: '',
+		pastedCode: '',
 		rounds: 0
 	},
 	_1: _elm_lang$core$Platform_Cmd$none
@@ -9396,7 +9529,7 @@ var _user$project$Main$update = F2(
 				} else {
 					return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 				}
-			default:
+			case 'ToggleBoardCode':
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
@@ -9406,8 +9539,145 @@ var _user$project$Main$update = F2(
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
+			case 'LoadBoard':
+				var _p8 = model.state.play;
+				if (_p8.ctor === 'Stopped') {
+					var _p9 = A3(_user$project$Grid$unpickle, _user$project$GameOfLife$defaultCell, _user$project$GameOfLife$unpickleCell, model.pastedCode);
+					if (_p9.ctor === 'Err') {
+						return {
+							ctor: '_Tuple2',
+							_0: _elm_lang$core$Native_Utils.update(
+								model,
+								{
+									msg: A2(_elm_lang$core$Debug$log, 'Unpickling: ', _p9._0)
+								}),
+							_1: _elm_lang$core$Platform_Cmd$none
+						};
+					} else {
+						var _p10 = _p9._0;
+						return {
+							ctor: '_Tuple2',
+							_0: _elm_lang$core$Native_Utils.update(
+								model,
+								{msg: 'no error', cellgrid: _p10, startGrid: _p10}),
+							_1: _elm_lang$core$Platform_Cmd$none
+						};
+					}
+				} else {
+					return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+				}
+			default:
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{pastedCode: _p0._0}),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
 		}
 	});
+var _user$project$Main$CodePasted = function (a) {
+	return {ctor: 'CodePasted', _0: a};
+};
+var _user$project$Main$LoadBoard = {ctor: 'LoadBoard'};
+var _user$project$Main$codeLoadSaveGui = function (m) {
+	var boardCodeVal = A2(_user$project$Grid$pickle, _user$project$GameOfLife$pickleCell, m.cellgrid);
+	return A2(
+		_elm_lang$html$Html$table,
+		{ctor: '[]'},
+		{
+			ctor: '::',
+			_0: A2(
+				_elm_lang$html$Html$tr,
+				{ctor: '[]'},
+				{
+					ctor: '::',
+					_0: A2(
+						_elm_lang$html$Html$td,
+						{ctor: '[]'},
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html$text('Your board: '),
+							_1: {ctor: '[]'}
+						}),
+					_1: {
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$td,
+							{ctor: '[]'},
+							{
+								ctor: '::',
+								_0: A2(
+									_elm_lang$html$Html$input,
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html_Attributes$value(boardCodeVal),
+										_1: {ctor: '[]'}
+									},
+									{ctor: '[]'}),
+								_1: {ctor: '[]'}
+							}),
+						_1: {ctor: '[]'}
+					}
+				}),
+			_1: {
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$tr,
+					{ctor: '[]'},
+					{
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$td,
+							{ctor: '[]'},
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html$text('Load board: '),
+								_1: {ctor: '[]'}
+							}),
+						_1: {
+							ctor: '::',
+							_0: A2(
+								_elm_lang$html$Html$td,
+								{ctor: '[]'},
+								{
+									ctor: '::',
+									_0: A2(
+										_elm_lang$html$Html$input,
+										{
+											ctor: '::',
+											_0: _elm_lang$html$Html_Attributes$placeholder('Paste board code here'),
+											_1: {
+												ctor: '::',
+												_0: _elm_lang$html$Html_Events$onInput(_user$project$Main$CodePasted),
+												_1: {ctor: '[]'}
+											}
+										},
+										{ctor: '[]'}),
+									_1: {
+										ctor: '::',
+										_0: A2(
+											_elm_lang$html$Html$button,
+											{
+												ctor: '::',
+												_0: _elm_lang$html$Html_Events$onClick(_user$project$Main$LoadBoard),
+												_1: {ctor: '[]'}
+											},
+											{
+												ctor: '::',
+												_0: _elm_lang$html$Html$text('Load'),
+												_1: {ctor: '[]'}
+											}),
+										_1: {ctor: '[]'}
+									}
+								}),
+							_1: {ctor: '[]'}
+						}
+					}),
+				_1: {ctor: '[]'}
+			}
+		});
+};
 var _user$project$Main$ToggleBoardCode = {ctor: 'ToggleBoardCode'};
 var _user$project$Main$Clear = {ctor: 'Clear'};
 var _user$project$Main$DecSize = {ctor: 'DecSize'};
@@ -9416,20 +9686,6 @@ var _user$project$Main$Stop = {ctor: 'Stop'};
 var _user$project$Main$Pause = {ctor: 'Pause'};
 var _user$project$Main$Play = {ctor: 'Play'};
 var _user$project$Main$buttonsFor = function (m) {
-	var boardCodeVal = A2(_user$project$Grid$pickle, _user$project$GameOfLife$pickleCell, m.cellgrid);
-	var boardCodeDisplay = m.state.boardCode ? 'none' : 'initial';
-	var showBoardCode = A2(
-		_elm_lang$html$Html$button,
-		{
-			ctor: '::',
-			_0: _elm_lang$html$Html_Events$onClick(_user$project$Main$ToggleBoardCode),
-			_1: {ctor: '[]'}
-		},
-		{
-			ctor: '::',
-			_0: _elm_lang$html$Html$text('Show/hide board code'),
-			_1: {ctor: '[]'}
-		});
 	var clear = A2(
 		_elm_lang$html$Html$button,
 		{
@@ -9502,91 +9758,62 @@ var _user$project$Main$buttonsFor = function (m) {
 			_0: _elm_lang$html$Html$text('Stop'),
 			_1: {ctor: '[]'}
 		});
-	return A2(
-		_elm_lang$core$Basics_ops['++'],
-		function () {
-			var _p8 = m.state.play;
-			switch (_p8.ctor) {
-				case 'Stopped':
-					return {
-						ctor: '::',
-						_0: play,
-						_1: {
-							ctor: '::',
-							_0: plus,
-							_1: {
-								ctor: '::',
-								_0: minus,
-								_1: {
-									ctor: '::',
-									_0: clear,
-									_1: {
-										ctor: '::',
-										_0: showBoardCode,
-										_1: {ctor: '[]'}
-									}
-								}
-							}
-						}
-					};
-				case 'Playing':
-					return {
-						ctor: '::',
-						_0: pause,
-						_1: {
-							ctor: '::',
-							_0: stop,
-							_1: {ctor: '[]'}
-						}
-					};
-				default:
-					return {
-						ctor: '::',
-						_0: play,
-						_1: {
-							ctor: '::',
-							_0: stop,
-							_1: {ctor: '[]'}
-						}
-					};
-			}
-		}(),
-		{
-			ctor: '::',
-			_0: A2(
-				_elm_lang$html$Html$input,
-				{
+	var _p11 = m.state.play;
+	switch (_p11.ctor) {
+		case 'Stopped':
+			return {
+				ctor: '::',
+				_0: play,
+				_1: {
 					ctor: '::',
-					_0: _elm_lang$html$Html_Attributes$style(
-						{
-							ctor: '::',
-							_0: {ctor: '_Tuple2', _0: 'display', _1: boardCodeDisplay},
-							_1: {ctor: '[]'}
-						}),
+					_0: plus,
 					_1: {
 						ctor: '::',
-						_0: _elm_lang$html$Html_Attributes$value(boardCodeVal),
-						_1: {ctor: '[]'}
+						_0: minus,
+						_1: {
+							ctor: '::',
+							_0: clear,
+							_1: {ctor: '[]'}
+						}
 					}
-				},
-				{ctor: '[]'}),
-			_1: {ctor: '[]'}
-		});
+				}
+			};
+		case 'Playing':
+			return {
+				ctor: '::',
+				_0: pause,
+				_1: {
+					ctor: '::',
+					_0: stop,
+					_1: {ctor: '[]'}
+				}
+			};
+		default:
+			return {
+				ctor: '::',
+				_0: play,
+				_1: {
+					ctor: '::',
+					_0: stop,
+					_1: {ctor: '[]'}
+				}
+			};
+	}
 };
 var _user$project$Main$Click = function (a) {
 	return {ctor: 'Click', _0: a};
 };
-var _user$project$Main$cellGridTable = function (grid) {
+var _user$project$Main$cellGridRows = function (grid) {
 	var tdFor = F2(
-		function (_p9, cell) {
-			var _p10 = _p9;
+		function (_p12, cell) {
+			var _p13 = _p12;
 			return A2(
 				_elm_lang$html$Html$td,
 				{
 					ctor: '::',
 					_0: _elm_lang$html$Html_Events$onClick(
 						_user$project$Main$Click(
-							{ctor: '_Tuple2', _0: _p10._0, _1: _p10._1})),
+							{ctor: '_Tuple2', _0: _p13._0, _1: _p13._1})),
 					_1: {
 						ctor: '::',
 						_0: _elm_lang$html$Html_Attributes$class(
@@ -9610,12 +9837,9 @@ var _user$project$Main$cellGridTable = function (grid) {
 					r));
 		});
 	return A2(
-		_elm_lang$html$Html$table,
-		{ctor: '[]'},
-		A2(
-			_elm_lang$core$List$indexedMap,
-			row,
-			_user$project$Grid$toLists(grid)));
+		_elm_lang$core$List$indexedMap,
+		row,
+		_user$project$Grid$toLists(grid));
 };
 var _user$project$Main$view = function (model) {
 	return A2(
@@ -9624,36 +9848,53 @@ var _user$project$Main$view = function (model) {
 		{
 			ctor: '::',
 			_0: A2(
-				_elm_lang$html$Html$div,
+				_elm_lang$html$Html$table,
+				{ctor: '[]'},
 				{
 					ctor: '::',
-					_0: _elm_lang$html$Html_Attributes$class('buttons'),
-					_1: {ctor: '[]'}
-				},
-				_user$project$Main$buttonsFor(model)),
+					_0: A2(
+						_elm_lang$html$Html$tr,
+						{ctor: '[]'},
+						_user$project$Main$buttonsFor(model)),
+					_1: {
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$tr,
+							{ctor: '[]'},
+							{
+								ctor: '::',
+								_0: _user$project$Main$codeLoadSaveGui(model),
+								_1: {ctor: '[]'}
+							}),
+						_1: {
+							ctor: '::',
+							_0: A2(
+								_elm_lang$html$Html$tr,
+								{ctor: '[]'},
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html$text(
+										A2(
+											_elm_lang$core$Basics_ops['++'],
+											'Time: ',
+											_elm_lang$core$Basics$toString(model.rounds))),
+									_1: {ctor: '[]'}
+								}),
+							_1: {ctor: '[]'}
+						}
+					}
+				}),
 			_1: {
 				ctor: '::',
 				_0: A2(
-					_elm_lang$html$Html$div,
+					_elm_lang$html$Html$table,
 					{
 						ctor: '::',
-						_0: _elm_lang$html$Html_Attributes$class('rounds'),
+						_0: _elm_lang$html$Html_Attributes$id('cellautogrid'),
 						_1: {ctor: '[]'}
 					},
-					{
-						ctor: '::',
-						_0: _elm_lang$html$Html$text(
-							A2(
-								_elm_lang$core$Basics_ops['++'],
-								'Time: ',
-								_elm_lang$core$Basics$toString(model.rounds))),
-						_1: {ctor: '[]'}
-					}),
-				_1: {
-					ctor: '::',
-					_0: _user$project$Main$cellGridTable(model.cellgrid),
-					_1: {ctor: '[]'}
-				}
+					_user$project$Main$cellGridRows(model.cellgrid)),
+				_1: {ctor: '[]'}
 			}
 		});
 };

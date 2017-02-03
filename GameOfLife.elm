@@ -61,9 +61,9 @@ pickleCell cell =
         Live -> "L"
         Dead -> "D"
 
-unpickleCell : String -> Maybe Cell
+unpickleCell : String -> Cell
 unpickleCell str =
     case str of
-        "L" -> Just Live
-        "D" -> Just Dead
-        _ -> Nothing
+        "L" -> Live
+        "D" -> Dead
+        _ -> Dead

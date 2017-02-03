@@ -1,15 +1,20 @@
-module Grid exposing (Grid, Index, init, initAs, pickle, map, indexedMap, fromLists, toLists, get, set, transpose, length, height, neighbours, mutate, incSize, decSize)
+module Grid exposing (Grid, Index, init, initAs, pickle, unpickle, map, indexedMap, fromLists, toLists, get, set, transpose, length, height, neighbours, mutate, incSize, decSize)
 
 import Array as A
 import List as L
 import Maybe exposing (andThen)
 import String
+import Dict
 
 
 -- EXPOSED FUNCTIONS
 
 type alias Grid a = A.Array (A.Array a)
 type alias Index = (Int, Int)
+
+mainDelimiter = "#!#"
+cellDelimiter = ","
+indxDelimiter = ":"
 
 length : Grid a -> Int
 length = A.length
@@ -108,10 +113,45 @@ decSize g =
         A.slice 0 (-1 + A.length g) shrunkRows
 
 pickle : (a -> String) -> Grid a -> String
-pickle f g = String.concat <| L.concat (toLists <| stringify f g)
+-- Turns the grid into a single String. Takes a helper function to map individual cell values to strings.
+pickle f g =
+    let
+        contents = L.concat (toLists <| indexedMap (\(i,j) val -> (toString i) ++ indxDelimiter ++ (toString j) ++ indxDelimiter ++ (f val)) g)
+    in
+        String.concat <| ((toString <| length g)++mainDelimiter)::(L.intersperse cellDelimiter contents)
 
-stringify : (a -> String) -> Grid a -> Grid String
-stringify f g = indexedMap (\index val -> "{" ++ (toString index) ++ ":" ++ (f val) ++ "}") g
+unpickle: a -> (String -> a) -> String -> Result String (Grid a)
+unpickle val unpickler s =
+    let
+        len = case List.head <| String.split mainDelimiter s of
+            Nothing -> Err "couldn't get gridsize"
+            Just s -> String.toInt s
+        base = case len of
+            Err s -> Err s
+            Ok n -> Ok (init val n n)
+        contents =
+            case (List.tail <| String.split mainDelimiter s) of
+                Nothing ->
+                    Err "Couldn't get the tail of the list."
+                Just cells ->
+                    Ok <| List.concat <| List.map (\s -> List.map (String.split indxDelimiter) s) <| List.map (String.split cellDelimiter) cells
+        f l = case l of
+            [i, j, val] -> Just ((String.toInt i, String.toInt j), val)
+            _ -> Nothing
+        dict = case contents of
+            Err s -> Err s
+            Ok c -> Ok (Dict.fromList <| List.filterMap (\((r1, r2), s) ->
+                case (r1, r2) of
+                    (Ok v1, Ok v2) -> Just ((v1, v2), (unpickler s))
+                    _ -> Nothing
+            ) <| List.filterMap identity <| List.map f c)
+
+    in
+        case (base, dict) of
+            (Err s, Ok _) -> Err s
+            (Ok _, Err s) -> Err s
+            (Err s, Err t) -> Err (s ++ ". Also: " ++ t)
+            (Ok b, Ok d) -> Ok <| indexedMap (\(i,j) cell -> Maybe.withDefault cell <| Dict.get (i,j) d) b
 
 -- UNEXPOSED FUNCTIONS
 
