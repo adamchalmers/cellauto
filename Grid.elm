@@ -73,11 +73,10 @@ transpose grid =
 
 
 neighbours : Index -> Grid a -> List a
-neighbours (x, y) g =
+neighbours (y, x) g =
     let
         cands =
-            [ get (x, y) g
-            , get (x + 1, y) g
+            [ get (x + 1, y) g
             , get (x - 1, y) g
             , get (x, y + 1) g
             , get (x, y - 1) g

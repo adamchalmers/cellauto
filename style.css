@@ -1,15 +1,24 @@
+body {
+    font-family: sans-serif;
+    font-size: 14px;
+}
+
+button {
+    font-size: 14px;
+}
+
 td {
-    border: 1px solid gray;
+    border: 1px solid lightgray;
     width: 10px;
     height: 10px;
 }
 
 .dead {
-    background: black;
+    background: white;
 }
 
 .live {
-    background: white;
+    background: black;
 }
 
 table {

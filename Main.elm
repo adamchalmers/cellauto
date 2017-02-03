@@ -1,12 +1,13 @@
 module Main exposing (..)
 
-import Html exposing (Html, program)
-import Time
-import Html exposing (..)
+import Html exposing (Html, program, div, text, button, tr, td, table)
 import Html.Attributes exposing (style, class)
 import Html.Events exposing (onClick)
-import Grid as G
 import List as L
+import Time
+
+import GameOfLife as Rules exposing (Cell)
+import Grid as G
 
 -- MODEL
 
@@ -17,23 +18,25 @@ type alias CellGrid = G.Grid Cell
 type alias Model =
     { state: State
     , cellgrid: CellGrid
-    , width: Int
     , startGrid: CellGrid
+    , rounds: Int
     }
 
 globals =
-    { startWidth = 8
+    { numRows = 30
     , cellWidth = "10px"
     }
 
-initGrid = G.initAs (\(i,j) -> if (i%2==0) then Live else Dead) globals.startWidth globals.startWidth
+initGrid : CellGrid
+initGrid =
+    G.initAs Rules.initBoard globals.numRows globals.numRows
 
 init : (Model, Cmd Msg)
 init =
     ( { state = Stopped
       , cellgrid = initGrid
       , startGrid = initGrid
-      , width = globals.startWidth}
+      , rounds = 0}
     , Cmd.none
     )
 
@@ -47,6 +50,7 @@ type Msg =
     | Stop
     | IncSize
     | DecSize
+    | Clear
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -68,6 +72,7 @@ update msg model =
             ( { model
               | state = Stopped
               , cellgrid = model.startGrid
+              , rounds = 0
               }
             , Cmd.none)
 
@@ -79,6 +84,7 @@ update msg model =
                 Playing ->
                     ( { model
                       | cellgrid = evolve model.cellgrid
+                      , rounds = model.rounds + 1
                       }
                     , Cmd.none)
 
@@ -91,8 +97,8 @@ update msg model =
 
                 Stopped ->
                     ( { model
-                      | cellgrid = G.mutate (x, y) invert model.cellgrid
-                      , startGrid = G.mutate (x, y) invert model.cellgrid
+                      | cellgrid = G.mutate (x, y) Rules.onClick model.cellgrid
+                      , startGrid = G.mutate (x, y) Rules.onClick model.cellgrid
                       }
                     , Cmd.none)
                 _ -> (model, Cmd.none)
@@ -103,8 +109,8 @@ update msg model =
 
                 Stopped ->
                     ( { model
-                      | cellgrid = G.incSize Live model.cellgrid
-                      , startGrid = G.incSize Live model.cellgrid
+                      | cellgrid = G.incSize Rules.defaultCell model.cellgrid
+                      , startGrid = G.incSize Rules.defaultCell model.cellgrid
                       }
                     , Cmd.none)
                 _ -> (model, Cmd.none)
@@ -121,12 +127,25 @@ update msg model =
                     , Cmd.none)
                 _ -> (model, Cmd.none)
 
+        -- Clear the board by setting all cells to their default value.
+        Clear ->
+            case model.state of
+
+                Stopped ->
+                    ( { model
+                      | cellgrid = G.init Rules.defaultCell (G.length model.startGrid) (G.length model.startGrid)
+                      , startGrid = G.init Rules.defaultCell (G.length model.startGrid) (G.length model.startGrid)
+                      }
+                    , Cmd.none)
+                _ -> (model, Cmd.none)
+
 -- VIEW
 
 view : Model -> Html Msg
 view model =
     div []
         [ div [ class "buttons" ] (buttonsFor model.state)
+        , div [ class "rounds" ] [ text ("Time: " ++ (toString model.rounds))]
         , cellGridTable model.cellgrid
         ]
 
@@ -138,7 +157,7 @@ cellGridTable grid =
         tdFor (x, y) cell =
             td
                 [ onClick (Click (x, y))
-                , class (if cell == Live then "live" else "dead")
+                , class (Rules.cssClass cell)
                 ]
                 []
     in
@@ -153,8 +172,9 @@ buttonsFor state =
         pause = button [onClick Pause] [text "Pause"]
         plus = button [onClick IncSize] [text "+ Row"]
         minus = button [onClick DecSize] [text "- Row"]
+        clear = button [onClick Clear] [text "Clear board"]
     in case state of
-        Stopped -> [play, plus, minus]
+        Stopped -> [play, plus, minus, clear]
         Playing -> [pause, stop]
         Paused -> [play, stop]
 
@@ -173,34 +193,6 @@ main = program
 
 -- CELLULAR AUTOMATON LOGIC
 
-type Cell = Live | Dead
-
-invert : Cell -> Cell
-invert c =
-    case c of
-        Live -> Dead
-        Dead -> Live
-
 evolve : CellGrid -> CellGrid
-evolve g = G.indexedMap (evolveCell g) g
-
-evolveCell : CellGrid -> (Int, Int) -> Cell -> Cell
-evolveCell g index cell =
-    let
-        neighbours = G.neighbours index g
-        numLive = L.length <| L.filter ((==) Live) neighbours
-        numDead = L.length <| L.filter ((==) Dead) neighbours
-    in
-        case cell of
-            Live ->
-                if numLive < 2 then
-                    Dead
-                else if (numLive == 2) || (numLive == 3) then
-                    Live
-                else
-                    Dead
-            Dead ->
-                if numLive == 3 then
-                    Live
-                else
-                    Dead
+evolve g =
+    G.indexedMap (\index cell -> Rules.evolveCell cell (G.neighbours index g)) g
