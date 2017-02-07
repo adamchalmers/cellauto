@@ -24,9 +24,9 @@ defaultCell = Dead
 
 cssClass : Cell -> String
 cssClass cell =
-    if cell == Live
-    then "live"
-    else "dead"
+    case cell of
+        Live -> "live"
+        Dead -> "dead"
 
 initBoard : (Int, Int) -> Cell
 -- Called to initialize the CA grid.
@@ -41,9 +41,7 @@ evolveCell : Cell -> List Cell -> Cell
 -- Steps the cell forward. Implements the CA rules.
 evolveCell cell neighs =
     let
-        numLive = count Live
-        numDead = count Dead
-        count val = List.length <| List.filter ((==) val) neighs
+        numLive = List.length <| List.filter ((==) Live) neighs
     in
         case cell of
             Live ->

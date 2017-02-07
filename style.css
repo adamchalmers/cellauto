@@ -29,10 +29,14 @@ td {
     margin: 0 auto;
 }
 
+#container {
+    width: 50%;
+    margin: 0 auto;
+}
+
 #controls {
-    width: 300px;
+    margin: 10px auto;
     border: 1px solid lightgrey;
-    display: block;
 }
 
 #footer {

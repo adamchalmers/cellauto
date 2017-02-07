@@ -186,12 +186,12 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    div []
-        [ table [ id "controls" ]
+    div [ id "container" ]
+        [ table [ id "cellautogrid" ] (cellGridRows model.cellgrid)
+        , table [ id "controls" ]
             [ tr [] (buttonsFor model)
             , tr [] [codeLoadSaveGui model]
             ]
-        , table [ id "cellautogrid" ] (cellGridRows model.cellgrid)
         , p [ id "footer" ] [ text "A cellular automaton simulator, built in Elm. ", Html.a [href globals.gh] [text "(Github)"] ]
         ]
 
