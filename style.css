@@ -27,6 +27,7 @@ td {
 
 #cellautogrid {
     margin: 0 auto;
+    border-collapse: collapse;
 }
 
 #container {
